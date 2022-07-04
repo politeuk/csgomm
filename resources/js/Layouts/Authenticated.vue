@@ -1,23 +1,70 @@
 <script setup>
+    import echo from '@/Services/socket';
     import {
         ref
     } from 'vue';
+    import {
+        usePage,
+        Link
+    } from '@inertiajs/inertia-vue3';
     import BreezeApplicationLogo from '@/Components/ApplicationLogo.vue';
     import BreezeDropdown from '@/Components/Dropdown.vue';
     import BreezeDropdownLink from '@/Components/DropdownLink.vue';
     import BreezeNavLink from '@/Components/NavLink.vue';
     import BreezeResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
     import {
-        Link
-    } from '@inertiajs/inertia-vue3';
-    import {
         useStopwatch
     } from 'vue-timer-hook';
     import BreezeButton from '@/Components/Button.vue';
 
-    import moment from 'moment'
+    import {
+        Inertia
+    } from '@inertiajs/inertia'
 
     const showingNavigationDropdown = ref(false);
+
+    let user = usePage().props.value.auth.user;
+
+    var uptime = 0
+
+    const stopwatch = useStopwatch(true);
+    stopwatch.reset(uptime, true)
+
+    var mins = stopwatch.minutes;
+    var secs = stopwatch.seconds;
+
+    // console.log(user.queue.queue_id);
+    if (user.queue) {
+        echo().private(`queues.${user.queue.queue_id}`)
+            .listen('QueuePop', (e) => {
+                console.log(e);
+            });
+    }
+
+    const props = defineProps({
+        mins: String,
+        secs: String,
+        notActive: false,
+    })
+
+    function joinQueue(event) {
+
+        Inertia.post(route('dashboard.queue'), {}, { onSuccess( page ) {
+            user = page.props.auth.user;
+            echo().private(`queues.${page.props.auth.user.queue.queue_id}`)
+            .listen('QueuePop', (e) => {
+                console.log(e);
+            });
+        }});
+        stopwatch.reset(uptime, true);
+    }
+
+    function leaveQueue(event) {
+        echo().leave(`queues.${user.queue.queue_id}`)
+        Inertia.delete(route('dashboard.queue.remove', event), {}, { onSuccess( page ) {
+
+        }});
+    }
 
 </script>
 
@@ -133,9 +180,12 @@
                 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between">
                     <div class="my-auto">
                         <slot name="header" class="my-auto" />
+                        <span v-if="$page.props.auth.user.queue">
+                            {{ $page.props.auth.user.queue.queue_id }}
+                        </span>
                     </div>
-                    <BreezeButton @click="toggleQueue" :type="button" id="queue">
-                        <div id="play" class="flex">
+                    <div v-if="!$page.props.auth.user.queue">
+                        <BreezeButton @click="joinQueue()" :type="button" id="queue">
                             <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -147,8 +197,11 @@
                             <span class="my-auto">
                                 Join Queue
                             </span>
-                        </div>
-                        <div id="timer" class="hidden flex">
+                        </BreezeButton>
+                    </div>
+                    <div v-if="$page.props.auth.user.queue">
+                        <BreezeButton @click="leaveQueue($page.props.auth.user.queue.queue_id)" :type="button"
+                            id="queue">
                             <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -157,8 +210,8 @@
                             <span class="my-auto">
                                 {{ mins.toString().padStart(2, '0') + ':' + secs.toString().padStart(2, '0') }}
                             </span>
-                        </div>
-                    </BreezeButton>
+                        </BreezeButton>
+                    </div>
                 </div>
             </header>
 
@@ -169,29 +222,3 @@
         </div>
     </div>
 </template>
-<script>
-    var uptime = 0
-
-    const stopwatch = useStopwatch(true);
-    stopwatch.reset(uptime, true)
-
-    var mins = stopwatch.minutes;
-    var secs = stopwatch.seconds;
-
-    export default {
-        name: "Layout",
-        props: {
-            mins: String,
-            secs: String,
-            notActive: false,
-        },
-        methods: {
-            toggleQueue(event) {
-                stopwatch.reset(uptime, true)
-                this.$el.querySelector("#queue > #play").classList.toggle('hidden');
-                this.$el.querySelector("#queue > #timer").classList.toggle('hidden');
-            }
-        }
-    }
-
-</script>

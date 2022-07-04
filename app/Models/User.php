@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Carbon\Carbon;
 
 class User extends Authenticatable
 {
@@ -25,4 +26,15 @@ class User extends Authenticatable
         'avatar',
         'discord_access_token'
     ];
+
+    public function queue() {
+        
+        return $this->hasOne('App\Models\QueuePlayers', `user_id`)->ofMany([
+            'updated_at' => 'max',
+            'id' => 'max',
+        ], function ($query) {
+            $query->where('updated_at', '>=', Carbon::now()->subMinute()->toString());
+        });
+
+    }
 }
