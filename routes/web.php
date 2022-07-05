@@ -27,6 +27,9 @@ Route::get('/', function () {
 Route::get('/login', [App\Http\Controllers\AuthController::class, 'steam'])->name('login');
 Route::get('/steam/callback', [App\Http\Controllers\AuthController::class, 'callback'])->name('steam.callback');
 
+Route::get('/connect/discord', [App\Http\Controllers\AuthController::class, 'discord'])->name('connect.discord');
+Route::get('/discord/callback', [App\Http\Controllers\AuthController::class, 'discord_callback'])->name('discord.callback');
+
 Route::post('/logout', [App\Http\Controllers\AuthController::class, 'destroy'])->name('logout');
 
 Route::get('/dashboard', function () {
