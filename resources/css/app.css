@@ -40,3 +40,50 @@
     background-color: #2b49ff;
     background-image: url("data:image/svg+xml,%3Csvg fill='%2325283b' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z' clip-rule='evenodd'%3E%3C/path%3E%3C/svg%3E");
 }
+
+.readyCountDown {
+    position: relative;
+    width: 5rem;
+    height: 5rem;
+    border-radius: 10rem;
+    background: linear-gradient(
+        rgba(43, 73, 255, 0),
+        rgba(43, 73, 255, 0.5),
+        rgba(43, 73, 255, 1)
+    );
+    box-shadow: 0px 0px 100px -50px black;
+    animation: animate 1s linear infinite;
+}
+
+.readyCountDown::before {
+    position: absolute;
+    content: "";
+    background: #151624;
+    color: white;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    height: 90%;
+    border-radius: 10rem;
+}
+
+@keyframes animate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.readyCountDownText {
+    width: 100%;
+    height: 5rem;
+    top: 0;
+    left: 0;
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+}

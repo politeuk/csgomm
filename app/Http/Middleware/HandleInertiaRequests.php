@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tightenco\Ziggy\Ziggy;
+use App\Models\Queue;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -43,6 +44,9 @@ class HandleInertiaRequests extends Middleware
                     'location' => $request->url(),
                 ]);
             },
+            'queue' => fn() => $request->user() && $request->user()->queue
+                    ? Queue::with(['users'])->where('id', $request->user()->queue->queue_id)->first()
+                    : null,
             'flash' => [
                 'message' => fn () => $request->session()->get('message')
             ],

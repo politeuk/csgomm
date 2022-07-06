@@ -17,7 +17,7 @@ class AuthController extends Controller
 
         $rurl = Socialite::driver('steam')->redirect()->getTargetUrl();
 
-        return response('', 409)->header('X-Inertia-Location', $rurl);
+        return Inertia::location($rurl);
     }
 
     public function callback() {

@@ -40,5 +40,6 @@ Route::get('/users', [App\Http\Controllers\UsersController::class, 'index'])->mi
 
 Route::post('/queue', [App\Http\Controllers\QueueController::class, 'join'])->middleware(['auth', 'verified'])->name('dashboard.queue');
 Route::delete('/queue', [App\Http\Controllers\QueueController::class, 'remove'])->middleware(['auth', 'verified'])->name('dashboard.queue.remove');
+Route::post('/queue/ready', [App\Http\Controllers\QueueController::class, 'ready'])->middleware(['auth', 'verified'])->name('dashboard.queue.ready');
 
 // require __DIR__.'/auth.php';

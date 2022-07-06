@@ -16,6 +16,6 @@ class Queue extends Model
     ];
 
     public function users() {
-        return $this->hasMany('App\Models\QueuePlayers','queue_id');
+        return $this->hasMany('App\Models\QueuePlayers','queue_id')->orderByDesc('state');
     }
 }

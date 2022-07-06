@@ -1,12 +1,7 @@
 <script setup>
 import echo from '@/Services/socket';
-import {
-    ref
-} from 'vue';
-import {
-    usePage,
-    Link
-} from '@inertiajs/inertia-vue3';
+import {ref, reactive} from 'vue';
+import {usePage, Link} from '@inertiajs/inertia-vue3';
 import BreezeApplicationLogo from '@/Components/ApplicationLogo.vue';
 import BreezeDropdown from '@/Components/Dropdown.vue';
 import BreezeDropdownLink from '@/Components/DropdownLink.vue';
@@ -19,14 +14,10 @@ import {
     DialogPanel,
     DialogTitle,
 } from '@headlessui/vue';
-import {
-    useStopwatch
-} from 'vue-timer-hook';
+import {useStopwatch, useTimer} from 'vue-timer-hook';
 import BreezeButton from '@/Components/Button.vue';
 
-import {
-    Inertia
-} from '@inertiajs/inertia'
+import {Inertia} from '@inertiajs/inertia'
 
 const showingNavigationDropdown = ref(false);
 
@@ -39,9 +30,11 @@ stopwatch.reset(uptime, true)
 
 var mins = stopwatch.minutes;
 var secs = stopwatch.seconds;
+const timer = useTimer(10);
+var timeLeft = timer.seconds;
 
 function playSound(sound) {
-    if(sound) {
+    if (sound) {
         var audio = new Audio(sound);
         audio.play();
     }
@@ -49,23 +42,51 @@ function playSound(sound) {
 
 const isOpen = ref(false);
 
-function queuePop() {
-    playSound('/sounds/ready.mp3');
-    isOpen.value = true
+function readyUp() {
+    if (user.queue.state < 2) {
+        Inertia.post(route('dashboard.queue.ready'), {}, {
+            onSuccess(page) {
+                console.log(page);
+            }
+        });
+    }
+}
+
+function queuePop(users) {
+
+    if (!isOpen.value) {
+        playSound('/sounds/oldready.mp3');
+        const time = new Date();
+        time.setSeconds(time.getSeconds() + 16);
+        timer.restart(time);
+        console.log(users);
+        Inertia.reload({ only: ['queue'] })
+        isOpen.value = true;
+    } else {
+        console.log(users);
+        Inertia.reload({ only: ['queue'] })
+    }
+
 }
 
 // console.log(user.queue.queue_id);
 if (user.queue) {
+    console.log(user.queue.state + 1);
     echo().private(`queues.${user.queue.queue_id}`)
         .listen('QueuePop', (e) => {
             console.log(e);
-            queuePop()
+            queuePop(e.q.users)
         });
+    if (user.queue.state > 0) {
+        queuePop(usePage().props.value.queue.users)
+    }
 }
 
 const props = defineProps({
     mins: String,
     secs: String,
+    queueUsers: Object,
+    timeLeft: String,
     notActive: false,
 })
 
@@ -76,8 +97,7 @@ function joinQueue(event) {
             user = page.props.auth.user;
             echo().private(`queues.${page.props.auth.user.queue.queue_id}`)
                 .listen('QueuePop', (e) => {
-                    console.log(e);
-                    queuePop()
+                    queuePop(e.q.users)
                 });
         }
     });
@@ -115,23 +135,21 @@ function leaveQueue(event) {
                             <DialogTitle as="h3" class="text-lg font-medium leading-6 text-primary text-center">
                                 Your Match is Ready
                             </DialogTitle>
-                            <div class="my-4">
-                                <div class="flex justify-center" id="readied">
-                                    <span class="isReady active"></span>
-                                    <span class="isReady active"></span>
-                                    <span class="isReady active"></span>
-                                    <span class="isReady active"></span>
-                                    <span class="isReady active"></span>
-                                    <span class="isReady active"></span>
-                                    <span class="isReady active"></span>
-                                    <span class="isReady"></span>
-                                    <span class="isReady"></span>
-                                    <span class="isReady"></span>
+                            <div class="timeLeft my-4 text-center relative">
+                                <div class="readyCountDown mx-auto"></div>
+                                <span class="absolute font-bold text-xl text-primary readyCountDownText">{{
+                                        timeLeft
+                                    }}</span>
+                            </div>
+                            <div class="my-4 flex justify-center">
+                                <div id="readied" v-for="user in $page.props.queue.users"
+                                     :key="user.id">
+                                    <span class="isReady" :class="{ active: user.state > 1 }"></span>
                                 </div>
                             </div>
 
                             <div class="text-center mt-6">
-                                <BreezeButton :type="button" id="readyup">
+                                <BreezeButton :type="button" id="readyup" @click="readyUp()">
                                     Read Up
                                 </BreezeButton>
                             </div>
