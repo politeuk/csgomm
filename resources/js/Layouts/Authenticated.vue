@@ -56,11 +56,11 @@ function queuePop(users) {
 
     if (!isOpen.value) {
         playSound('/sounds/oldready.mp3');
-        const time = new Date();
+        const time = new Date(usePage().props.value.queue.updated_at);
         time.setSeconds(time.getSeconds() + 16);
         timer.restart(time);
         console.log(users);
-        Inertia.reload({ only: ['queue'] })
+        Inertia.reload({ only: ['queue'] });
         isOpen.value = true;
     } else {
         console.log(users);
@@ -69,7 +69,6 @@ function queuePop(users) {
 
 }
 
-// console.log(user.queue.queue_id);
 if (user.queue) {
     var currentdate = new Date();
     var olddate = new Date(user.queue.created_at);
