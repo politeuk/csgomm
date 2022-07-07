@@ -71,7 +71,10 @@ function queuePop(users) {
 
 // console.log(user.queue.queue_id);
 if (user.queue) {
-    console.log(user.queue.state + 1);
+    var currentdate = new Date();
+    var olddate = new Date(user.queue.created_at);
+    var difference = (currentdate.getTime() - olddate.getTime()) / 1000;
+    stopwatch.reset(difference, true);
     echo().private(`queues.${user.queue.queue_id}`)
         .listen('QueuePop', (e) => {
             console.log(e);
